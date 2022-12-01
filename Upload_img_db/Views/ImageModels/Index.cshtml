@@ -22,20 +22,23 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Title)
-            </td>
-            <td>
+        @foreach (var item in Model) {
+            <tr>
+                <td>
+                        <a href="@Html.Encode(@item.ImageName)" target="_blank"> @Html.DisplayFor(modelItem => item.Title)</a>
+                    
+                </td>
+
+                
+             <td>
                 @Html.DisplayFor(modelItem => item.ImageName)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.ImageId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.ImageId">Details</a> |
+             </td>
+             <td>
+                @*<a asp-action="Edit" asp-route-id="@item.ImageId">Edit</a> |
+                <aasp-action="Details" asp-route-id="@item.ImageId">Details</a> |*@
                 <a asp-action="Delete" asp-route-id="@item.ImageId">Delete</a>
-            </td>
-        </tr>
+             </td>
+            </tr>
 }
     </tbody>
 </table>

@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Upload_img_db.Models;
@@ -13,13 +16,15 @@ namespace Upload_img_db.Controllers
     {
         private readonly ImageDbContext _context;
         private readonly IWebHostEnvironment _hostEnvironment;
+        ImageModel ob1 = new ImageModel();
+
 
         public ImageModelsController(ImageDbContext context,IWebHostEnvironment hostEnvironment)
         {
             _context = context;
             this._hostEnvironment = hostEnvironment;
         }
-
+        
         // GET: ImageModels
         public async Task<IActionResult> Index()
         {
@@ -27,7 +32,7 @@ namespace Upload_img_db.Controllers
         }
 
         // GET: ImageModels/Details/5
-        public async Task<IActionResult> Details(int? id)
+       /* public async Task<IActionResult> Details(int? id)
         {
             if (id == null || _context.Images == null)
             {
@@ -42,7 +47,7 @@ namespace Upload_img_db.Controllers
             }
 
             return View(imageModel);
-        }
+        }*/
 
         // GET: ImageModels/Create
         public IActionResult Create()
@@ -54,29 +59,65 @@ namespace Upload_img_db.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ImageId,Title,ImageFile")] ImageModel imageModel)
+        // [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(IFormFile ImageFile, string Title)
         {
-            if (ModelState.IsValid)
+
+
+            string fileName = Path.GetFileName(ImageFile.FileName);
+            string p1 = "C:\\Users\\AditiGarg\\source\\repos\\upload_img_db\\Upload_img_db\\wwwroot\\Images";
+            string p = "C:\\Users\\AditiGarg\\source\\repos\\upload_img_db\\Upload_img_db\\wwwroot\\";
+            string file_path = Path.Combine(p1, fileName);
+            Directory.CreateDirectory(p1);
+            var stream = new FileStream(file_path, FileMode.Create);
+            ImageFile.CopyToAsync(stream);
+            stream.Close();
+            string connectionString = "DefaultEndpointsProtocol=https;AccountName=taskmgi;AccountKey=tuJIS7vmEmFmfkS2PXsVXL3vECCPx0nfJEieWpHZYz9k+Uc+kqcsUHQAj+hDp3nqq62Pp9Z22tRZ+AStggzgvg==;EndpointSuffix=core.windows.net";
+            string containerName = "development";
+            BlobContainerClient containerClient = new BlobContainerClient(connectionString, containerName);
+            var filePathOverCloud = file_path.Replace(p, string.Empty);
+            long filesize = ImageFile.Length;
+            if (filesize <= 5000000)
             {
-                string wwwRootPath = _hostEnvironment.WebRootPath;
-                Console.WriteLine();
-                string fileName = Path.GetFileNameWithoutExtension(imageModel.ImageFile.FileName);
-                string extension=Path.GetExtension(imageModel.ImageFile.FileName);
-                imageModel.ImageName=fileName = fileName + DateTime.Now.ToString("yymmssfff") + extension;
-                string path=Path.Combine(wwwRootPath + "//Image//", fileName);
-                using (var fileStream = new FileStream(path, FileMode.Create))
+                MemoryStream str = new MemoryStream(System.IO.File.ReadAllBytes(file_path));
+                foreach (BlobItem blob in containerClient.GetBlobs())
                 {
-                    await imageModel.ImageFile.CopyToAsync(fileStream); 
+                    string s = blob.Name;
+                    string a = "/";
+                    string b = @"\";
+                    if (s.Replace(a, b) == filePathOverCloud)
+                    {
+                        return View("Exists");
+                    }
+                    else
+                    {
+                        Console.WriteLine("File started to upload");
+
+
+
+                        containerClient.UploadBlob(filePathOverCloud, str);
+
+                       /* ob1.ImageName = filePathOverCloud;
+                        ob1.Title = Title;
+                        _context.Add(ob1);
+                        await _context.SaveChangesAsync();*/
+                    }
                 }
 
-
-                    _context.Add(imageModel);
+                str.Close();
+                ob1.ImageName = filePathOverCloud;
+                ob1.Title = Title;
+                _context.Add(ob1);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
             }
-            return View(imageModel);
+            else
+            {
+                return View("Error");
+            }
+
+            return View("Create");
         }
+            
 
         // GET: ImageModels/Edit/5
         public async Task<IActionResult> Edit(int? id)

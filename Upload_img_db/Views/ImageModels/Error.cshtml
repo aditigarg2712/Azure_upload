@@ -1,0 +1,15 @@
+﻿@model Upload_img_db.Models.ImageModel
+
+@{
+    ViewData["Title"] = "Error";
+}
+
+<h1>Error!!</h1>
+
+<h3> FileSize exceeded... Please select a valid file(less than 5MB) </h3>
+<div>
+
+    <form asp-action="Error">
+        <a asp-action="Create">Upload again!</a>
+    </form>
+</div>
