@@ -27,6 +27,7 @@
                 <td>
                         <a href="@Html.Encode(@item.ImageName)" target="_blank"> @Html.DisplayFor(modelItem => item.Title)</a>
                     
+                    
                 </td>
 
                 
@@ -36,7 +37,7 @@
              <td>
                 @*<a asp-action="Edit" asp-route-id="@item.ImageId">Edit</a> |
                 <aasp-action="Details" asp-route-id="@item.ImageId">Details</a> |*@
-                <a asp-action="Delete" asp-route-id="@item.ImageId">Delete</a>
+                  <a href="/ImageModels/DeleteConfirmed?id=@item.ImageId&blobName=@item.ImageName" onclick="return confirm('Are you sure?')"> Delete </a>
              </td>
             </tr>
 }

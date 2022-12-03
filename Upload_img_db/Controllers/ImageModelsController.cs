@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.WindowsAzure.Storage.Blob;
 using Upload_img_db.Models;
 
 namespace Upload_img_db.Controllers
@@ -60,7 +61,7 @@ namespace Upload_img_db.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         // [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(IFormFile ImageFile, string Title)
+        public async Task<IActionResult> Create(IFormFile ImageFile, string? Title)
         {
 
 
@@ -70,7 +71,7 @@ namespace Upload_img_db.Controllers
             string file_path = Path.Combine(p1, fileName);
             Directory.CreateDirectory(p1);
             var stream = new FileStream(file_path, FileMode.Create);
-            ImageFile.CopyToAsync(stream);
+            await ImageFile.CopyToAsync(stream);
             stream.Close();
             string connectionString = "DefaultEndpointsProtocol=https;AccountName=taskmgi;AccountKey=tuJIS7vmEmFmfkS2PXsVXL3vECCPx0nfJEieWpHZYz9k+Uc+kqcsUHQAj+hDp3nqq62Pp9Z22tRZ+AStggzgvg==;EndpointSuffix=core.windows.net";
             string containerName = "development";
@@ -89,33 +90,42 @@ namespace Upload_img_db.Controllers
                     {
                         return View("Exists");
                     }
-                    else
-                    {
-                        Console.WriteLine("File started to upload");
-
-
-
-                        containerClient.UploadBlob(filePathOverCloud, str);
-
-                       /* ob1.ImageName = filePathOverCloud;
-                        ob1.Title = Title;
-                        _context.Add(ob1);
-                        await _context.SaveChangesAsync();*/
-                    }
+                    
                 }
-
+                Console.WriteLine("File started to upload");
+                containerClient.UploadBlob(filePathOverCloud, str);
                 str.Close();
+
                 ob1.ImageName = filePathOverCloud;
                 ob1.Title = Title;
                 _context.Add(ob1);
                 await _context.SaveChangesAsync();
-            }
-            else
-            {
-                return View("Error");
+                return View("Index");
             }
 
-            return View("Create");
+
+
+            /*containerClient.UploadBlob(filePathOverCloud, str);*/
+            /*str.Close();
+
+            ob1.ImageName = filePathOverCloud;
+            ob1.Title = Title;
+            _context.Add(ob1);
+            await _context.SaveChangesAsync();*/
+
+            /*containerClient.UploadBlob(filePathOverCloud, str);*/
+
+
+            /*str.Close();*/
+            /*ob1.ImageName = filePathOverCloud;
+            ob1.Title = Title;
+            _context.Add(ob1);
+            await _context.SaveChangesAsync();*/
+
+            
+            return View("Error");
+            
+            
         }
             
 
@@ -171,7 +181,7 @@ namespace Upload_img_db.Controllers
         }
 
         // GET: ImageModels/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        /*public async Task<IActionResult> Delete(int? id,string blobName)
         {
             if (id == null || _context.Images == null)
             {
@@ -186,23 +196,33 @@ namespace Upload_img_db.Controllers
             }
 
             return View(imageModel);
-        }
+        }*/
 
         // POST: ImageModels/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+
+        // [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id, string blobName)
         {
-            if (_context.Images == null)
+
+            /*if (_context.Images == null)
             {
                 return Problem("Entity set 'ImageDbContext.Images'  is null.");
-            }
+            }*/
+            string connectionString = "DefaultEndpointsProtocol=https;AccountName=taskmgi;AccountKey=tuJIS7vmEmFmfkS2PXsVXL3vECCPx0nfJEieWpHZYz9k+Uc+kqcsUHQAj+hDp3nqq62Pp9Z22tRZ+AStggzgvg==;EndpointSuffix=core.windows.net";
+            string containerName = "development";
+
+            BlobClient blob = new BlobClient(connectionString,containerName, blobName);
+            blob.Delete();
+
+            
             var imageModel = await _context.Images.FindAsync(id);
             if (imageModel != null)
             {
                 _context.Images.Remove(imageModel);
+                
+
             }
-            
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
